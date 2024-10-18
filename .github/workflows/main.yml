@@ -1,4 +1,4 @@
-on: [push]
+on: [push, pull_request]
 
 jobs:
   build:
@@ -18,3 +18,16 @@ jobs:
 
       - name: Run tests
         run: npm test
+      - name: Comment on PR
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const { conclusion } = context.payload.check_run;
+            const comment = conclusion === 'success' ? 'All tests passed!' : 'Some tests failed.';
+            github.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: comment
+            });
